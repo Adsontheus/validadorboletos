@@ -13,7 +13,8 @@ public class Boleto {
 
     private String linhaDigitavel;
     private boolean valido;
-    private Double valor;
+
     private String banco;
+    private Double valor;
     private String vencimento;
 }
