@@ -4,3 +4,4 @@ public class BoletoInvalidoException extends RuntimeException {
     public BoletoInvalidoException(String msg) {
         super(msg);
     }
+}
