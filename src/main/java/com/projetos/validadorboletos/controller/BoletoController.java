@@ -1,53 +1,57 @@
 package com.projetos.validadorboletos.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 import com.projetos.validadorboletos.model.Boleto;
+import com.projetos.validadorboletos.repository.BoletoUtils;
 import com.projetos.validadorboletos.service.BoletoService;
-import jakarta.validation.constraints.NotBlank;
+import com.projetos.validadorboletos.repository.BoletoRepository;
 
 import java.util.List;
-
-import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/boletos")
 public class BoletoController {
 
     private final BoletoService service;
+    private final BoletoRepository repo;
 
-    public BoletoController(BoletoService service) {
+    public BoletoController(BoletoService service, BoletoRepository repo) {
         this.service = service;
+        this.repo = repo;
+    }
     }
 
-    // Criar e validar
-    @PostMapping("/validar")
-    public Boleto validar(@RequestParam @NotBlank String linhaDigitavel) {
-        return service.validarBoleto(linhaDigitavel);
+    @PostMapping
+    public Boleto cadastrar(@RequestBody Map<String, String> body) {
+        String linha = body.get("linhaDigitavel");
+        return service.cadastrar(linha);
     }
 
-    // Listar todos
     @GetMapping
-    public List<Boleto> listarTodos() {
-        return service.listarTodos();
+    public List<Boleto> listar() {
+        return service.listar();
     }
 
-    // Buscar por ID
-    @GetMapping("/{id}")
-    public Boleto buscarPorId(@PathVariable Long id) {
-        return service.buscarPorId(id);
+    @GetMapping("/validar")
+    public Map<String, Object> validar(@RequestParam String linhaDigitavel) {
+        boolean valido = service.validar(linhaDigitavel);
+
+        return Map.of(
+                "linhaDigitavel", linhaDigitavel,
+                "valido", valido,
+                "banco", BoletoUtils.identificarBanco(linhaDigitavel)
+        );
     }
 
-    // Atualizar boleto
-    @PutMapping("/{id}")
-    public Boleto atualizar(
-            @PathVariable Long id,
-            @RequestParam @NotBlank String novaLinhaDigitavel
-    ) {
-        return service.atualizar(id, novaLinhaDigitavel);
-    }
-
-    // Deletar boleto
     @DeleteMapping("/{id}")
-    public void deletar(@PathVariable Long id) {
-        service.deletar(id);
+    public ResponseEntity<String> deletar(@PathVariable Long id) {
+        if (repo.existsById(id)) {
+            repo.deleteById(id);
+            return ResponseEntity.ok("Boleto deletado com sucesso.");
+        }
+        return ResponseEntity.status(404).body("Boleto não encontrado.");
     }
 }
